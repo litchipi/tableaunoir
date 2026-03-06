@@ -20,7 +20,8 @@
     in { type = "app"; program = "${app}/bin/${name}"; };
   in {
     apps.install = mkScript "install-node-deps" ''
-      npm install
+      export NODE_ENV=production
+      npm install --include dev
       rg -n "usr/bin/env node" -l node_modules/ | xargs sed -i "s+/usr/bin/env node+${pkgs.nodejs}/bin/node+g"
       rg -n "usr/bin/env bash" -l node_modules/ | xargs sed -i "s+/usr/bin/env bash+${pkgs.bash}/bin/bash+g"
       rg -n "usr/bin/env sh" -l node_modules/ | xargs sed -i "s+/usr/bin/env sh+${pkgs.bash}/bin/bash+g"
@@ -32,6 +33,7 @@
     '';
 
     apps.lint = mkScript "lint-pkg" ''
+      export NODE_ENV=development
       npm run lint | tee dist/status.txt
     '';
   });
