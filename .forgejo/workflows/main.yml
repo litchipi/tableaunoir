@@ -1,0 +1,24 @@
+name: Node.js CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: nix
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install NodeJS
+        run: nix build nixpkgs#nodejs && echo "PATH="$PATH:$PWD/result/bin" >> $FORGEJO_ENV
+
+      - name: Install dependancies
+        run: npm clean-install
+
+      - name: Build
+        id: build
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint | tee dist/status.txt
