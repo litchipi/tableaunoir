@@ -1,0 +1,20 @@
+name: Node.js CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    runs-on: nix
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: nix run .#install
+
+      - name: Build
+        run: nix run .#build
+
+      - name: Lint
+        run: nix run .#lint
