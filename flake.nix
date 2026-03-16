@@ -6,6 +6,7 @@
 
   outputs = inputs: with inputs; flake-utils.lib.eachDefaultSystem (system: let
     pkgs = import nixpkgs { inherit system; };
+    lib = pkgs.lib;
 
     mkScript = name: text: let
       app = pkgs.writeShellApplication {
@@ -18,22 +19,41 @@
         ];
       };
     in { type = "app"; program = "${app}/bin/${name}"; };
-  in {
-    apps.install = mkScript "install-node-deps" ''
-      export NODE_ENV=production
+
+    nodeCache = pkgs.fetchNpmDeps {
+      src = ./.;
+      hash = "sha256-LZjFeXeZdnCzLSPg+28hNqyJGGAb+ZXEyGl7lTCCeZE=";
+    };
+
+    psb = what: pkg: "rg -n \"usr/bin/env ${what}\" -l node_modules/ | xargs sed -i \"s+/usr/bin/env ${what}+${lib.getExe pkg}+g\" 2>/dev/null || echo \"No shebang to patch for ${what}\"";
+    install = ''
+      npm ci --cache ${nodeCache}
       npm install --include dev
-      rg -n "usr/bin/env node" -l node_modules/ | xargs sed -i "s+/usr/bin/env node+${pkgs.nodejs}/bin/node+g"
-      rg -n "usr/bin/env bash" -l node_modules/ | xargs sed -i "s+/usr/bin/env bash+${pkgs.bash}/bin/bash+g"
-      rg -n "usr/bin/env sh" -l node_modules/ | xargs sed -i "s+/usr/bin/env sh+${pkgs.bash}/bin/bash+g"
+      ${psb "node" pkgs.nodejs}
+      ${psb "bash" pkgs.bash}
+      ${psb "sh" pkgs.bash}
     '';
 
-    apps.build = mkScript "build-pkg" ''
-      export NODE_ENV=production
+    build = type: ''
+      export NODE_ENV=${type}
+      ${install}
       npm run build
     '';
+  in {
+    apps.default = mkScript "start-pkg" ''
+      ${build "production"}
+      ${pkgs.electron}/bin/electron ./mainElectron.js
+    '';
 
+    apps.test = mkScript "test-pkg" ''
+      ${build "development"}
+      ${pkgs.electron}/bin/electron ./mainElectron.js
+    '';
+
+    apps.build = mkScript "build-pkg" (build "production");
     apps.lint = mkScript "lint-pkg" ''
       export NODE_ENV=development
+      ${install}
       npm run lint | tee dist/status.txt
     '';
   });
