@@ -26,17 +26,9 @@
     };
 
     psb = what: pkg: "rg -n \"usr/bin/env ${what}\" -l node_modules/ | xargs sed -i \"s+/usr/bin/env ${what}+${lib.getExe pkg}+g\" 2>/dev/null || echo \"No shebang to patch for ${what}\"";
-    install = ''
-      npm ci --cache ${nodeCache}
-      npm install --include dev
-      ${psb "node" pkgs.nodejs}
-      ${psb "bash" pkgs.bash}
-      ${psb "sh" pkgs.bash}
-    '';
 
     build = type: ''
       export NODE_ENV=${type}
-      ${install}
       npm run build
     '';
   in {
@@ -50,10 +42,17 @@
       ${pkgs.electron}/bin/electron ./mainElectron.js
     '';
 
+    apps.install = mkScript "install" ''
+      npm ci --cache ${nodeCache}
+      npm install --include dev
+      ${psb "node" pkgs.nodejs}
+      ${psb "bash" pkgs.bash}
+      ${psb "sh" pkgs.bash}
+    '';
+
     apps.build = mkScript "build-pkg" (build "production");
     apps.lint = mkScript "lint-pkg" ''
       export NODE_ENV=development
-      ${install}
       npm run lint | tee dist/status.txt
     '';
   });
