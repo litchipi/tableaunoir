@@ -166,14 +166,17 @@ export class User {
         this.cursor.classList.remove("cursorinscreen");
 
         if (x <= Layout.getWindowLeft()) {
+            console.log("Cursor to left")
             this.cursor.classList.add("cursortoleft");
             x = Layout.getWindowLeft() + 24;
         }
         else if (x >= Layout.getWindowRight()) {
+            console.log("Cursor to right")
             this.cursor.classList.add("cursortoright");
             x = Layout.getWindowRight() - 24;
         }
         else {
+            console.log("Cursor in screen")
             this.cursor.classList.add("cursorinscreen");
         }
         this.cursor.style.left = (x - 8) + "px";

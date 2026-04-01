@@ -28,6 +28,7 @@ export class ChalkCursor {
      * The cursor is an objet {data: dataofimage, x: position where to click, y: position where to click}
      */
     static getStyleCursor(color: string): { data: string, x: number, y: number } {
+        console.log("Get style cursor", color)
         return { data: ChalkCursor.getCursorURL(color), x: ChalkCursor.leftHanded ? 32 : 0, y: 0 };
     }
 

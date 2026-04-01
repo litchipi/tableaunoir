@@ -20,6 +20,7 @@ export class TouchScreen {
      * @description converts a touch event into a mouse event
      */
     static _touchHandler(event: TouchEvent): void {
+        console.log("Touch handler")
         const touches = event.changedTouches;
         const first = touches[0];
         let type = "";
